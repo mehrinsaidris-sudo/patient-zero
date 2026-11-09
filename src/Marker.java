@@ -81,7 +81,81 @@ public class Marker {
      * Example: a = "ACGTAC", b = "TTACGT", k = 4: the words of a are ACGT, CGTA, GTAC; only ACGT is in b, so the answer is 1.
      */
     public static int sharedWords(String a, String b, int k) {
-        // TODO Mission 4
-        return -1;
+        if (k <= 0 || a.length() < k || b.length() < k) {
+            return 0;
+        }
+
+        long base = 31;
+        long mod = 1_000_000_007L;
+
+        long power = 1;
+
+        for (int i = 1; i < k; i++) {
+            power = (power * base) % mod;
+        }
+
+        Map<Long, List<Integer>> hashes = new HashMap<>();
+
+        long hashB = 0;
+
+        for (int i = 0; i < k; i++) {
+            hashB = (hashB * base + b.charAt(i)) % mod;
+        }
+
+        hashes.computeIfAbsent(hashB, x -> new ArrayList<>()).add(0);
+
+        for (int i = k; i < b.length(); i++) {
+            hashB = (
+                    (hashB - b.charAt(i - k) * power % mod + mod)
+                            * base + b.charAt(i)
+            ) % mod;
+
+            int start = i - k + 1;
+
+            hashes.computeIfAbsent(hashB, x -> new ArrayList<>())
+                    .add(start);
+        }
+
+        long hashA = 0;
+
+        for (int i = 0; i < k; i++) {
+            hashA = (hashA * base + a.charAt(i)) % mod;
+        }
+
+        int count = 0;
+
+        for (int start = 0; start <= a.length() - k; start++) {
+
+            if (start > 0) {
+                hashA = (
+                        (hashA - a.charAt(start - 1) * power % mod + mod)
+                                * base + a.charAt(start + k - 1)
+                ) % mod;
+            }
+
+            List<Integer> candidates = hashes.get(hashA);
+
+            if (candidates == null) {
+                continue;
+            }
+
+            for (int pos : candidates) {
+                boolean equal = true;
+
+                for (int j = 0; j < k; j++) {
+                    if (a.charAt(start + j) != b.charAt(pos + j)) {
+                        equal = false;
+                        break;
+                    }
+                }
+
+                if (equal) {
+                    count++;
+                    break;
+                }
+            }
+        }
+
+        return count;
     }
 }
